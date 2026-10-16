@@ -1,0 +1,4 @@
+# Phase 3b progress — escalation choreography rework (branch phase/phase-3b)
+
+- P11b DONE 2026-10-16: multi-stage choreography planner (client/choreography.js SSv2: outcome-first per-stage HP battles 4-6s, 5/10/10 HP, draw standoffs both-at-1HP, narrow 1-2/decisive 3+ HP bands, outcome-independent variety, <=32B encodeBout replay records, SSv1 legacy decode kept; choreography.test.js 6/6 green).
+- P12b DONE 2026-10-16: escalation presentation + v2 wiring (stub deals 1-3 draws via evaluateBout with WIN/LOSS/NARROW/DECISIVE/DRAW/FLOOR/DDRAW/DLOSS/DD1000 forces, runStages with DRAW floor transitions + weapon-swap flash, HP bars, TURBO pref persisted, v2 paytable help + debug page; 19/19 browser checks incl. DD1000 3-stage +$1,000.00, DRAW floor banner, DEFEAT flat, ARMED accounting, SSv2 refresh recovery, desktop + mobile zero console errors; math/ untouched).

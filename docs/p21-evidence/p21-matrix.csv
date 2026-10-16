@@ -1,0 +1,19 @@
+device,currency,bet,stake_sent_units,cost_line,bet_button,banner,balance_delta_units,expected_delta_units,verdict
+desktop,USD,$0.10,100000,"Trial — total cost $0.10 (base $0.10 × 1)","Fight — $0.10","+$0.20",100000,100000,OK
+desktop,USD,$1.00,1000000,"Trial — total cost $1.00 (base $1.00 × 1)","Fight — $1.00","+$2.00",1000000,1000000,OK
+desktop,USD,$1,000,1000000000,"Trial — total cost $1,000.00 (base $1,000.00 × 1)","Fight — $1,000.00","+$2,000.00",1000000000,1000000000,OK
+desktop,JPY,$0.10,100000,"Trial — total cost ¥0 (base ¥0 × 1)","Fight — ¥0","+¥0",100000,100000,OK
+desktop,JPY,$1.00,1000000,"Trial — total cost ¥1 (base ¥1 × 1)","Fight — ¥1","+¥2",1000000,1000000,OK
+desktop,JPY,$1,000,1000000000,"Trial — total cost ¥1,000 (base ¥1,000 × 1)","Fight — ¥1,000","+¥2,000",1000000000,1000000000,OK
+desktop,MXN,$0.10,100000,"Trial — total cost MX$0.10 (base MX$0.10 × 1)","Fight — MX$0.10","+MX$0.20",100000,100000,OK
+desktop,MXN,$1.00,1000000,"Trial — total cost MX$1.00 (base MX$1.00 × 1)","Fight — MX$1.00","+MX$2.00",1000000,1000000,OK
+desktop,MXN,$1,000,1000000000,"Trial — total cost MX$1,000.00 (base MX$1,000.00 × 1)","Fight — MX$1,000.00","+MX$2,000.00",1000000000,1000000000,OK
+mobile-portrait,USD,$0.10,100000,"Trial — total cost $0.10 (base $0.10 × 1)","Fight — $0.10","+$0.20",100000,100000,OK
+mobile-portrait,USD,$1.00,1000000,"Trial — total cost $1.00 (base $1.00 × 1)","Fight — $1.00","+$2.00",1000000,1000000,OK
+mobile-portrait,USD,$1,000,1000000000,"Trial — total cost $1,000.00 (base $1,000.00 × 1)","Fight — $1,000.00","+$2,000.00",1000000000,1000000000,OK
+mobile-portrait,JPY,$0.10,100000,"Trial — total cost ¥0 (base ¥0 × 1)","Fight — ¥0","+¥0",100000,100000,OK
+mobile-portrait,JPY,$1.00,1000000,"Trial — total cost ¥1 (base ¥1 × 1)","Fight — ¥1","+¥2",1000000,1000000,OK
+mobile-portrait,JPY,$1,000,1000000000,"Trial — total cost ¥1,000 (base ¥1,000 × 1)","Fight — ¥1,000","+¥2,000",1000000000,1000000000,OK
+mobile-portrait,MXN,$0.10,100000,"Trial — total cost MX$0.10 (base MX$0.10 × 1)","Fight — MX$0.10","+MX$0.20",100000,100000,OK
+mobile-portrait,MXN,$1.00,1000000,"Trial — total cost MX$1.00 (base MX$1.00 × 1)","Fight — MX$1.00","+MX$2.00",1000000,1000000,OK
+mobile-portrait,MXN,$1,000,1000000000,"Trial — total cost MX$1,000.00 (base MX$1,000.00 × 1)","Fight — MX$1,000.00","+MX$2,000.00",1000000000,1000000000,OK

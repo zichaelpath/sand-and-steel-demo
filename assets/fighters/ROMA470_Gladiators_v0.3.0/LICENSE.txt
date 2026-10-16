@@ -1,0 +1,35 @@
+ROMA 470 GLADIATORS ASSET LICENSE — Version 1.0
+
+Licensor: the publisher of the official ROMA 470 Gladiators asset pack on itch.io.
+This license applies to the artwork, editable sources, metadata, documentation
+and catalogue supplied in this download. A lawful purchase of this Gladiators pack grants the following non-exclusive license:
+
+YOU MAY
+- Use and modify the included assets in unlimited personal and commercial games,
+  applications, videos, promotional material and other finished creative works.
+- Release and sell those finished works without royalties or additional fees.
+- Share assets privately with collaborators working on your projects, solely
+  for that work; collaborators may not reuse them for unrelated projects unless
+  they obtain their own copy of the relevant edition.
+- Distribute the assets as part of your finished work, including its necessary
+  runtime files, provided that the work is not a substitute for this asset pack.
+
+YOU MAY NOT
+- Resell, give away, sublicense or redistribute the raw assets or their modified
+  versions as an asset pack, stock library, template asset collection or other
+  standalone resource download.
+- Place raw files in public repositories or let others extract them through an
+  asset redistribution or download service.
+- Claim you created the original, unmodified assets or imply endorsement by the
+  pack's publisher.
+
+Credit is appreciated but not required: "ROMA 470 asset pack" with a link to the
+official itch.io page is sufficient. No exclusivity is granted.
+
+Gladiators-pack buyers receive all future updates released for this same pack at
+no additional charge. No specific release schedule or number of updates is
+promised. This does not include separate products or custom work.
+
+Assets are supplied as-is without a guarantee of fitness for a particular
+engine or project. Mandatory rights under applicable law remain unaffected.
+Previously granted rights to downloaded versions continue after later updates.

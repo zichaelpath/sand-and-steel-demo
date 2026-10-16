@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SAND &amp; STEEL</title>
+  <link rel="icon" href="data:," />
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <div id="page">
+    <header id="topbar" class="panel">
+      <div class="brand">
+        <h1>SAND &amp; STEEL</h1>
+        <p class="tagline">Gladiator arena casino</p>
+      </div>
+      <p id="balance" class="balance-pill">Balance: —</p>
+      <div class="top-actions">
+        <button id="help-open" type="button" class="btn-small">Help / Paytable</button>
+        <label class="mute"><input id="mute" type="checkbox" /> Mute</label>
+        <label class="mute"><input id="turbo" type="checkbox" /> Turbo</label>
+      </div>
+    </header>
+
+    <section id="auth-error" class="panel" hidden>
+      <p><strong>Could not connect to the game server.</strong></p>
+      <p id="auth-error-text"></p>
+      <p>No balance is shown because no balance was received — check your
+        connection and try again.</p>
+      <button id="auth-retry" type="button" class="btn-small">Retry</button>
+    </section>
+
+    <section id="resume" class="panel" hidden>
+      <p id="resume-text"></p>
+      <button id="resume-go" type="button" class="btn-small">Replay &amp; settle from record</button>
+      <p id="resume-note"></p>
+    </section>
+
+    <!-- Single-screen desktop: slim fighter strip across the top, then one
+         row: [bet control deck side panel | ARENA hero]. Mobile portrait
+         keeps the stacked order (arena, strip, deck). All game IDs
+         unchanged (app.js contract). -->
+    <main id="layout" class="casino">
+      <div id="center">
+        <section id="fighters" class="panel" aria-label="Choose your gladiator">
+          <h2>Gladiator <span class="cosmetic-tag">cosmetic</span></h2>
+          <div id="fighter-cards"></div>
+          <p class="hint">Looks only — never sent to the RGS.</p>
+        </section>
+
+        <section id="stage" class="panel" aria-label="Arena">
+          <h2>Arena <span id="mode-tag" class="trial">TRIAL</span></h2>
+          <div id="arena-wrap">
+            <canvas id="arena" width="960" height="540"
+              aria-label="Arena bout between your gladiator and the house champion"></canvas>
+            <div id="banner" hidden></div>
+          </div>
+          <!-- Mobile portrait (mockup A): the status line lives directly under
+               the pinned arena, so bout state/result summary never scroll
+               away. On desktop it simply sits at the bottom of the stage
+               column. -->
+          <p id="status" role="status">Booting…</p>
+          <p id="versus" aria-live="polite"></p>
+          <p id="stage-line" aria-live="polite"></p>
+          <p id="result" aria-live="polite"></p>
+        </section>
+
+        <section id="betpanel" class="panel" aria-label="Bet control deck">
+          <h2>Bet controls</h2>
+          <div id="deck-meters" aria-live="polite">
+            <div class="meter wide"><span class="mlabel">Balance</span><strong id="deck-balance">—</strong></div>
+            <div class="meter"><span class="mlabel">Bet</span><strong id="deck-bet">—</strong></div>
+            <div class="meter"><span class="mlabel">Last win</span><strong id="deck-win">—</strong></div>
+          </div>
+          <div id="deck-controls">
+            <div class="stepper" role="group" aria-label="Bet amount">
+              <button id="bet-minus" type="button" class="step-btn" aria-label="Decrease bet">−</button>
+              <label class="field stake-field">Stake (from server)
+                <select id="stake"></select>
+              </label>
+              <button id="bet-plus" type="button" class="step-btn" aria-label="Increase bet">+</button>
+            </div>
+            <label class="field">Display currency
+              <select id="currency">
+                <option value="USD">USD</option>
+                <option value="EUR">EUR</option>
+                <option value="GBP">GBP</option>
+                <option value="JPY">JPY</option>
+                <option value="MXN">MXN</option>
+                <option value="AUD">AUD</option>
+              </select>
+            </label>
+            <div class="row" role="group" aria-label="Bout mode">
+              <button id="mode-trial" type="button" class="mode-btn">Trial</button>
+              <button id="mode-armed" type="button" class="mode-btn">Armed</button>
+            </div>
+            <p id="cost-line" class="cost">—</p>
+            <div id="armed-confirm" hidden>
+              <p id="armed-confirm-text"></p>
+              <button id="armed-yes" type="button" class="btn-small">Confirm Armed Bout</button>
+              <button id="armed-no" type="button" class="btn-small">Cancel</button>
+            </div>
+            <button id="bet" type="button" class="bet-btn">Fight</button>
+          </div>
+          <p class="hint">Stub harness: open with <code>?stub=1</code> (add
+            <code>&amp;hang=1</code> to test refresh recovery).
+            <a href="./debug.html">Math debug page</a></p>
+        </section>
+      </div>
+    </main>
+
+    <div id="help-overlay" hidden>
+      <div id="help-dialog" class="panel" role="dialog" aria-modal="true" aria-labelledby="help-title">
+        <h2 id="help-title">Paytable &amp; rules</h2>
+        <div id="help-body"></div>
+        <button id="help-close" type="button" class="btn-small">Close</button>
+      </div>
+    </div>
+
+    <pre id="config">—</pre>
+  </div>
+  <script src="../math/bout.js"></script>
+  <script src="./clips.js"></script>
+  <script src="./arena.js"></script>
+  <script src="./sprites.js"></script>
+  <script src="./choreography.js"></script>
+  <script src="./rgs-client.js"></script>
+  <script src="./audio.js"></script>
+  <script src="./juice.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>

@@ -1,0 +1,82 @@
+{
+  "passed": true,
+  "tests": 19,
+  "results": [
+    {
+      "name": "Every fighter and appearance loads every directional action",
+      "passed": true
+    },
+    {
+      "name": "One attack applies damage only once across its active window",
+      "passed": true
+    },
+    {
+      "name": "All six distinct attacks reach a nearby opponent",
+      "passed": true
+    },
+    {
+      "name": "An attack facing away misses",
+      "passed": true
+    },
+    {
+      "name": "An opponent beyond weapon range is not damaged",
+      "passed": true
+    },
+    {
+      "name": "Frontal guard blocks, reacts and remains raised",
+      "passed": true
+    },
+    {
+      "name": "A shield does not block attacks from behind",
+      "passed": true
+    },
+    {
+      "name": "Late block is vulnerable during its raising frames",
+      "passed": true
+    },
+    {
+      "name": "Releasing block plays the raising frames backwards to neutral",
+      "passed": true
+    },
+    {
+      "name": "Timed dodge avoids the complete active attack interval",
+      "passed": true
+    },
+    {
+      "name": "Death is one-shot, holds the corpse and rejects new actions",
+      "passed": true
+    },
+    {
+      "name": "Net release follows JSON timing and persists as unequipped",
+      "passed": true
+    },
+    {
+      "name": "Net prevents walking and dodging until the entanglement expires",
+      "passed": true
+    },
+    {
+      "name": "One net is recovered after its cooldown; non-Retiarius cannot cast",
+      "passed": true
+    },
+    {
+      "name": "Large elapsed time and fragmented updates produce identical outcomes",
+      "passed": true
+    },
+    {
+      "name": "Profile motion speed matches the native stride metadata",
+      "passed": true
+    },
+    {
+      "name": "Changing direction preserves action frame and elapsed timing",
+      "passed": true
+    },
+    {
+      "name": "Native netless exports exist for every appearance and all directions",
+      "passed": true
+    },
+    {
+      "name": "Movement respects arena bounds and prevents living fighters crossing",
+      "passed": true
+    }
+  ]
+}

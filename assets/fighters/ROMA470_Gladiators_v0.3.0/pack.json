@@ -1,0 +1,32 @@
+{
+  "name": "ROMA 470 \u2014 Gladiators: The Unbroken",
+  "version": "0.3.0",
+  "publicationStatus": "local-release-candidate",
+  "fighters": 6,
+  "extraAppearances": 24,
+  "baseCharacterFrames": 1888,
+  "baseClips": 244,
+  "uniqueSourceFrames": 9456,
+  "sourceClips": 1222,
+  "nativeSources": 32,
+  "effects": 2,
+  "characterLayers": 24,
+  "directionalSheets": 120,
+  "netlessDirectionalSheets": 20,
+  "directions": [
+    "front",
+    "rear",
+    "right",
+    "left"
+  ],
+  "frameSize": [
+    128,
+    128
+  ],
+  "license": "LICENSE.txt",
+  "futureUpdatesIncluded": true,
+  "catalogue": "index.html",
+  "combatDemo": "CombatDemo/index.html",
+  "nativeValidation": "NATIVE_VALIDATION.json",
+  "combatValidation": "Validation/COMBAT_TESTS.json"
+}

@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The Unbroken — Combat workshop</title>
+<style>
+:root{color-scheme:dark;--bg:#101a1c;--panel:#1d2c2e;--gold:#dbb87c;--ink:#eee4d2;--muted:#abbab5}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,sans-serif}main{max-width:1180px;margin:auto;padding:28px}header{display:flex;justify-content:space-between;align-items:end;border-top:2px solid var(--gold);padding:20px 0}.kicker{font-size:11px;letter-spacing:.22em;color:var(--gold)}h1{font:44px Georgia;margin:5px 0}h2{font:25px Georgia;margin:0 0 12px}p{color:var(--muted);margin:8px 0}a{color:var(--gold)}button,select{background:#263c3e;border:1px solid #647a74;color:var(--ink);border-radius:4px;padding:10px 12px;font:14px system-ui}button{cursor:pointer;touch-action:none}button:hover{border-color:var(--gold)}button:disabled{opacity:.45;cursor:default}button:focus-visible,select:focus-visible,canvas:focus-visible,a:focus-visible{outline:2px solid var(--gold);outline-offset:3px}.toolbar{display:flex;gap:12px;flex-wrap:wrap;align-items:end;margin-bottom:16px}label{font-size:11px;color:var(--muted);display:grid;gap:4px}.stage{border:1px solid #6a6554;border-radius:5px;overflow:hidden;background:#332f29}canvas{display:block;width:100%;height:auto;image-rendering:pixelated}.below{display:grid;grid-template-columns:1.3fr 1fr;gap:24px;margin-top:24px}.panel{border:1px solid #344b4a;padding:21px;background:var(--panel);border-radius:5px}.buttons{display:flex;flex-wrap:wrap;gap:8px}.buttons button{min-width:98px}.keys{font-size:13px;line-height:1.9}kbd{background:#101c1e;border:1px solid #4b615c;padding:2px 5px;border-radius:3px;color:var(--gold)}.meter{font-variant-numeric:tabular-nums;font-size:13px}#events{height:128px;overflow:auto;font:12px/1.8 ui-monospace,monospace;padding-left:0;list-style:none;color:var(--muted)}#load{font-size:13px;min-height:20px}.hint{font-size:12px}footer{margin-top:25px;padding-top:18px;border-top:1px solid #344b4a;color:var(--muted);font-size:12px}@media(max-width:700px){main{padding:15px}.below{grid-template-columns:1fr}header{display:block}h1{font-size:34px}}
+</style>
+<main><header><div><div class="kicker">ROMA 470 · GLADIATORS · V0.3.0</div><h1>Combat workshop</h1><p>Try the fighters. Read the movement. Test the timing.</p></div><a href="../index.html">← Animation catalogue</a></header>
+<div class="toolbar"><label>YOUR FIGHTER<select id="fighter"></select></label><label>APPEARANCE<select id="appearance"><option value="0">Original</option><option value="1">Appearance 1</option><option value="2">Appearance 2</option><option value="3">Appearance 3</option><option value="4">Appearance 4</option></select></label><label>OPPONENT<select id="opponent"></select></label><label>TRAINING MODE<select id="mode"><option value="sparring">Slow sparring</option><option value="passive" selected>Passive target</option><option value="guard">Guard practice</option></select></label><button id="reset">Reset duel</button><button id="pause">Pause</button></div>
+<div class="stage"><canvas id="arena" width="960" height="520" tabindex="0" aria-label="Playable gladiator arena. A and D move, Shift runs, Space attacks, B blocks, V dodges, N casts a net."></canvas></div>
+<p id="load" role="status">Loading native sprite exports…</p>
+<div class="below"><section class="panel"><h2>Take your place</h2><div class="buttons"><button data-hold="left">← Walk</button><button data-hold="right">Walk →</button><button data-hold="charge">Run</button><button data-action="Attack">Attack</button><button data-hold="block">Hold block</button><button data-action="Dodge">Dodge</button><button data-action="NetCast" id="net">Cast net</button></div><p class="keys"><kbd>A</kbd> / <kbd>D</kbd> move · <kbd>Shift</kbd> run · <kbd>Space</kbd> attack<br><kbd>B</kbd> hold block · <kbd>V</kbd> dodge back · <kbd>N</kbd> cast net · <kbd>P</kbd> pause</p><p class="hint">Select Passive target to inspect attacks, Guard practice to test shields, or Slow sparring to try defence. Reset after a defeat. The Retiarius regains its net four seconds after release.</p></section>
+<section class="panel"><h2>Fight notes</h2><p id="state" class="meter" aria-live="off"></p><p id="stats" class="meter"></p><ul id="events" aria-label="Recent combat events"></ul><label><span><input id="anchors" type="checkbox"> Show feet, hand anchors and attack reach</span></label></section></div>
+<footer>This isolated reference demo uses the shipped PNG/JSON files and actual event timing. It demonstrates integration, with intentionally simple collision and opponent behaviour. The ROMA 470 game is a separate project. No account, network service or installation is required. <a href="../IMPORT_GUIDE.md">Import guide</a> · <a href="../Validation/COMBAT_TESTS.json">Automated checks</a></footer></main>
+<script src="../catalog-data.js"></script><script src="combat-core.js"></script><script>
+'use strict';
+const $=id=>document.getElementById(id),canvas=$('arena'),ctx=canvas.getContext('2d'),cache=new Map(),held=new Set();
+let arena,paused=false,ready=false,last=0,lastNote='',lastStatus='',loadVersion=0;
+for(const u of PACK.units){$('fighter').add(new Option(u.name,u.id));$('opponent').add(new Option(u.name,u.id))}
+$('fighter').value='retiarius';$('opponent').value='murmillo';
+function picture(path){if(!cache.has(path)){const im=new Image();im.src='../'+path;cache.set(path,im)}return cache.get(path)}
+function waitImage(path){return new Promise((resolve,reject)=>{const im=picture(path);if(im.complete&&im.naturalWidth)return resolve();im.addEventListener('load',resolve,{once:true});im.addEventListener('error',()=>reject(new Error(path)),{once:true})})}
+function preload(u){const paths=Object.values(u.directional).map(d=>d.image);if(u.netless)paths.push(...Object.values(u.netless).map(d=>d.image));return Promise.all(paths.map(waitImage))}
+async function reset(){
+  const ticket=++loadVersion;ready=false;held.clear();$('load').textContent='Loading native sprite exports…';
+  const id=$('fighter').value,appearance=Number($('appearance').value);
+  const player=appearance?id+'_appearance_'+appearance:id;
+  arena=new GladiatorCombat.Arena(PACK,{player,enemy:$('opponent').value,mode:$('mode').value});
+  try{await Promise.all(arena.actors.map(a=>preload(a.unit)));await Promise.all(PACK.effects.map(e=>waitImage(e.image)));if(ticket!==loadVersion)return;ready=true;paused=false;$('pause').textContent='Pause';$('load').textContent='Ready · Click the arena to use the keyboard. Runs entirely from the package files.';lastNote=null;lastStatus=null;render();}
+  catch(e){if(ticket===loadVersion)$('load').textContent='Could not load '+e.message+'. Keep CombatDemo beside the package folders.';}
+}
+function input(){return {axis:(held.has('right')?1:0)-(held.has('left')?1:0),charge:held.has('charge'),block:held.has('block')}}
+function command(action){if(ready&&!paused)arena.command(action);canvas.focus({preventScroll:true})}
+function togglePause(){paused=!paused;held.clear();$('pause').textContent=paused?'Resume':'Pause'}
+for(const el of document.querySelectorAll('[data-action]'))el.onclick=()=>command(el.dataset.action);
+for(const el of document.querySelectorAll('[data-hold]')){
+  el.onpointerdown=e=>{if(!ready||paused)return;el.setPointerCapture(e.pointerId);held.add(el.dataset.hold);e.preventDefault()};
+  el.onpointerup=el.onpointercancel=el.onlostpointercapture=()=>held.delete(el.dataset.hold);
+}
+const keyMap={KeyA:'left',ArrowLeft:'left',KeyD:'right',ArrowRight:'right',ShiftLeft:'charge',ShiftRight:'charge',KeyB:'block'};
+window.addEventListener('keydown',e=>{if(['SELECT','INPUT'].includes(e.target.tagName))return;if(!ready)return;if(keyMap[e.code]){e.preventDefault();held.add(keyMap[e.code]);return}const action={Space:'Attack',KeyV:'Dodge',KeyN:'NetCast'}[e.code];if(action){e.preventDefault();if(!e.repeat)command(action)}if(e.code==='KeyP'&&!e.repeat)togglePause()});
+window.addEventListener('keyup',e=>{if(keyMap[e.code])held.delete(keyMap[e.code])});
+window.addEventListener('blur',()=>held.clear());document.addEventListener('visibilitychange',()=>{held.clear();if(document.hidden){paused=true;$('pause').textContent='Resume'}});
+for(const id of ['fighter','appearance','opponent','mode'])$(id).onchange=reset;$('reset').onclick=reset;$('pause').onclick=togglePause;
+function drawActor(a){
+  const dir=a.animation.direction,set=!a.netReady&&a.unit.netless?a.unit.netless:a.unit.directional;
+  const im=picture(set[dir].image),offset=a.unit.animation.meta.frameTags.find(t=>t.name.startsWith(dir+'_')).from;
+  const f=a.animation.frame-offset,x=Math.round(a.x-64),y=a.y-114;
+  ctx.fillStyle='#241f1a66';ctx.beginPath();ctx.ellipse(a.x,a.y+1,a.hp?14:32,3,0,0,Math.PI*2);ctx.fill();
+  if(im.complete&&im.naturalWidth)ctx.drawImage(im,(f%8)*128,Math.floor(f/8)*128,128,128,x,y,128,128);
+  if(a.boundUntil>arena.time){ctx.fillStyle='#e4d2a1';ctx.font='7px system-ui';ctx.textAlign='center';ctx.fillText('ENTANGLED',a.x,a.y-106)}
+  if($('anchors').checked){const frame=a.animation.data.frames[a.animation.frame];for(const [name,p] of Object.entries(frame.anchors)){ctx.fillStyle=name.includes('foot')?'#80d5b9':'#efba78';ctx.fillRect(a.x+p.x-65,a.y+p.y-115,2,2)}ctx.strokeStyle=a.active?'#e6b875':'#77939166';ctx.beginPath();ctx.moveTo(a.x,a.y-52);ctx.lineTo(a.x+a.facing*GladiatorCombat.reach[a.id],a.y-52);ctx.stroke();}
+}
+function drawEffect(id,age,x,y){const e=PACK.effects.find(e=>e.id===id),im=picture(e.image);const f=Math.min(e.animation.frames.length-1,Math.floor(age/80));const rect=e.animation.frames[f].frame;if(im.complete&&im.naturalWidth)ctx.drawImage(im,rect.x,rect.y,128,128,Math.round(x-64),Math.round(y-(id==='net_landed'?80:64)),128,128)}
+function render(){
+  ctx.setTransform(2,0,0,2,0,0);ctx.imageSmoothingEnabled=false;
+  const sky=ctx.createLinearGradient(0,0,0,200);sky.addColorStop(0,'#27383c');sky.addColorStop(1,'#747467');ctx.fillStyle=sky;ctx.fillRect(0,0,480,260);
+  ctx.fillStyle='#484b43';ctx.fillRect(0,91,480,59);ctx.fillStyle='#686452';ctx.fillRect(0,148,480,8);ctx.fillStyle='#8b7b5c';ctx.fillRect(0,156,480,104);
+  for(let x=0;x<480;x+=40){ctx.fillStyle='#373f3c';ctx.fillRect(x+9,102,22,42);ctx.beginPath();ctx.arc(x+20,103,11,Math.PI,0);ctx.fill();ctx.fillStyle='#77705a';ctx.fillRect(x+2,89,5,61)}
+  ctx.fillStyle='#ae946633';for(let i=0;i<75;i++){const x=(i*71)%480,y=165+(i*17)%90;ctx.fillRect(x,y,3+i%4,1)}
+  ctx.fillStyle='#e7d2a366';ctx.fillRect(27,218,426,1);
+  if(arena){
+    for(const a of arena.actors)drawActor(a);
+    for(const n of arena.landings)drawEffect('net_landed',n.age,n.x,n.y-2);
+    for(const n of arena.projectiles)drawEffect('net_projectile',n.age,n.x,n.y);
+    arena.actors.forEach((a,i)=>{const x=i?294:22;ctx.fillStyle='#132024dd';ctx.fillRect(x-7,13,170,48);ctx.textAlign=i?'right':'left';ctx.fillStyle='#eddfc0';ctx.font='8px system-ui';ctx.fillText((i?'OPPONENT · ':'YOU · ')+a.unit.name.replace(' / APPEARANCE ',' / '),i?449:22,29);ctx.fillStyle='#383d36';ctx.fillRect(x,37,155,5);ctx.fillStyle=i?'#b88167':'#a8bda4';ctx.fillRect(x,37,155*a.hp/100,5);ctx.font='6px system-ui';ctx.fillStyle='#bfcac2';ctx.fillText(a.hp+' HP · '+a.action,i?449:22,54)});
+    if(paused||arena.actors.some(a=>!a.hp)){ctx.fillStyle='#132024d9';ctx.fillRect(105,78,270,44);ctx.textAlign='center';ctx.fillStyle='#e5c58f';ctx.font='14px Georgia';ctx.fillText(paused?'Paused':arena.actors[0].hp?'Duel won':'Defeated — try again',240,97);ctx.font='7px system-ui';ctx.fillStyle='#becbc1';ctx.fillText(paused?'Resume to continue':'Reset duel to practice another matchup',240,111)}
+    const player=arena.actors[0];$('net').disabled=player.id!=='retiarius'||!player.netReady||player.hp<=0;
+    const net=player.id==='retiarius'?(player.netReady?'Net ready':'Net returns in '+Math.max(0,(player.netReturnsAt-arena.time)/1000).toFixed(1)+'s'):'No net equipped';
+    const state=player.action+' · Frame '+(player.animation.frame-player.animation.tag.from+1)+' · '+net;
+    if(state!==lastStatus){$('state').textContent=state;lastStatus=state}
+    const s=arena.stats;$('stats').textContent=s.hits+' hits · '+s.blocks+' blocks · '+s.captures+' net captures';
+    const notes=arena.events.slice(-5).reverse().map(e=>(e.time/1000).toFixed(2)+'s  '+(e.actor?'Opponent':'You')+' · '+e.type.replaceAll('_',' ')).join('\n');
+    if(notes!==lastNote){$('events').replaceChildren(...notes.split('\n').filter(Boolean).map(t=>{const li=document.createElement('li');li.textContent=t;return li}));lastNote=notes}
+  }
+}
+function loop(time){const dt=Math.min(50,time-last);last=time;if(ready&&!paused)arena.advance(dt,input());render();requestAnimationFrame(loop)}
+reset();requestAnimationFrame(loop);
+</script></html>

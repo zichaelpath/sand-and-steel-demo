@@ -1,0 +1,23 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "meta/muse-spark-1.3-contributor",
+  "provider": {
+    "local-vllm": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Local vLLM \u2014 Qwen3-8B-AWQ (free, fast, weaker; good for small tasks)",
+      "options": {
+        "baseURL": "http://100.72.11.17:8000/v1",
+        "apiKey": "not-needed"
+      },
+      "models": {
+        "qwen3-8b": {
+          "name": "Qwen3-8B-AWQ (local)",
+          "limit": {
+            "context": 4096,
+            "output": 1024
+          }
+        }
+      }
+    }
+  }
+}

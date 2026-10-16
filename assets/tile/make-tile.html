@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<!-- SAND & STEEL — tile key-art renderer (Phase 3, P13).
+  Renders bright key art (arena + two fighters mid-clash + title in the safe
+  area, no dark edges, no Stake branding) at exact submission sizes, driven
+  by ?w= &h= query params. Export with the tile script (screenshots the
+  canvas element at deviceScaleFactor=1 for pixel-exact output):
+    tile  3:4  (?w=600&h=800)   -> assets/tile/tile-3x4.png
+    cover 16:9 (?w=1280&h=720)  -> assets/tile/cover-16x9.png
+  Sizes per docs/rgs-ground-truth.md: the submission form blocks unless a
+  3:4 tile + 16:9 cover are supplied. -->
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>SAND &amp; STEEL — tile renderer</title>
+  <style>
+    html, body { margin: 0; padding: 0; background: #f0c979; }
+    canvas { display: block; image-rendering: pixelated; }
+  </style>
+</head>
+<body>
+  <canvas id="tile"></canvas>
+  <script src="../../client/clips.js"></script>
+  <script src="../../client/arena.js"></script>
+  <script src="../../client/sprites.js"></script>
+  <script>
+    (function () {
+      'use strict';
+      var q = new URLSearchParams(window.location.search);
+      var W = parseInt(q.get('w') || '600', 10);
+      var H = parseInt(q.get('h') || '800', 10);
+      var cv = document.getElementById('tile');
+      cv.width = W; cv.height = H;
+      var ctx = cv.getContext('2d');
+      ctx.imageSmoothingEnabled = false;
+
+      var crowd = window.SandSteelArena.makeCrowd();
+      var SP = window.SandSteelSprites.createPlayer(window.SandSteelClips);
+      // NOTE: root-relative sprite path — this page lives in /assets/tile/,
+      // so the '../assets/...' helper in sprites.js would resolve wrongly here.
+
+      // Mid-clash: player lunges (attack, active frame), champion reels (hit).
+      var player = SP.makeFighter('secutor', 'right');
+      var champ = SP.makeFighter('rebel_champion', 'left');
+      SP.setClip(player, 'attack'); player.idx = 5;
+      SP.setClip(champ, 'hit'); champ.idx = 2;
+      var scale = H / 300; // fighters own the frame at any tile size
+      player.scale = scale; champ.scale = scale;
+      player.x = W * 0.36; player.y = H * 0.78;
+      champ.x = W * 0.64; champ.y = H * 0.78;
+
+      function paint() {
+        // Full-bleed bright arena — no dark edges anywhere.
+        window.SandSteelArena.drawArena(ctx, W, H, 1200, crowd);
+        SP.drawShadow(ctx, player, 70 * scale / 2.4, 14 * scale / 2.4);
+        SP.drawShadow(ctx, champ, 70 * scale / 2.4, 14 * scale / 2.4);
+        SP.draw(ctx, player);
+        SP.draw(ctx, champ);
+        // Clash spark burst between the blades.
+        var cx = W * 0.5, cy = H * 0.52;
+        var cols = ['#ffffff', '#ffd97a', '#e8b64c'];
+        for (var i = 0; i < 26; i++) {
+          var a = (i / 26) * 6.283;
+          var r = (H * 0.02) + (i % 3) * H * 0.014;
+          ctx.fillStyle = cols[i % 3];
+          ctx.fillRect(cx + Math.cos(a) * r, cy + Math.sin(a) * r, 4, 4);
+        }
+        // Title in the safe area (centered, central 80% width).
+        // Fit the title inside the safe width — never overflow the bar.
+        var fs = Math.min(W * 0.13, H * 0.09);
+        ctx.font = 'bold ' + fs + 'px Georgia, serif';
+        while (ctx.measureText('SAND & STEEL').width > W * 0.74 && fs > 8) {
+          fs -= 2;
+          ctx.font = 'bold ' + fs + 'px Georgia, serif';
+        }
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        var ty = H * 0.14;
+        ctx.fillStyle = 'rgba(42, 28, 8, 0.55)';
+        ctx.fillRect(W * 0.1, ty - fs * 0.75, W * 0.8, fs * 1.5);
+        ctx.fillStyle = '#fff3c4';
+        ctx.fillText('SAND & STEEL', W * 0.5, ty - fs * 0.12);
+        ctx.fillStyle = '#e8b64c';
+        ctx.font = 'bold ' + (fs * 0.34) + 'px Georgia, serif';
+        ctx.fillText('GLADIATOR ARENA', W * 0.5, ty + fs * 0.42);
+        window.__tileReady = true;
+      }
+
+      var loaded = 0;
+      [['secutor', player], ['rebel_champion', champ]].forEach(function (pair) {
+        var img = new Image();
+        img.onload = function () {
+          pair[1].img = img; pair[1].loaded = true;
+          if (++loaded === 2) paint();
+        };
+        img.onerror = function () { if (++loaded === 2) paint(); };
+        img.src = window.location.origin +
+          '/assets/fighters/ROMA470_Gladiators_v0.3.0/Characters/PNG/' +
+          pair[0] + '.png';
+      });
+      // Sky+title underlay even if sprites fail: never ship a blank tile.
+      setTimeout(function () { if (!window.__tileReady) paint(); }, 3000);
+    })();
+  </script>
+</body>
+</html>
