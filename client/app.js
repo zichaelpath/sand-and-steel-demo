@@ -505,6 +505,20 @@
     }
 
     function spawnImpact(x, y, big) {
+      // P24: sword-hit impact. The slash is a stroke-able arc particle —
+      // drawn as a gold/white arc sweeping across the impact point and
+      // fading over ~150ms (kind 'slash'). Sparks spray as short LINES
+      // radiating from the impact (kind 'spark'), never squares.
+      parts.push({
+        kind: 'slash',
+        x: x, y: y,
+        vx: 0, vy: 0, // the arc is drawn around (x, y); it never travels
+        r: 90 + Math.random() * 70 + (big ? 70 : 0),
+        a0: Math.random() * 6.283,
+        life: 150,
+        t: 0,
+        c: '#fff3c0',
+      });
       var n = big ? 16 : 10, i, a, sp;
       for (i = 0; i < n; i++) {
         a = Math.random() * 6.283;
@@ -516,15 +530,19 @@
           grav: 500, sz: 4,
           life: 450 + Math.random() * 250, t: 0,
           c: i % 3 ? '#ffd97a' : '#ffffff',
+          ang: a,
         });
       }
       for (i = 0; i < 8; i++) {
+        a = Math.random() * 6.283;
         parts.push({
           kind: 'spark',
           x: x - 40 + Math.random() * 80, y: 500,
           vx: (Math.random() - 0.5) * 120, vy: -40 - Math.random() * 120,
           grav: 500, sz: 4,
-          life: 500 + Math.random() * 300, t: 0, c: '#d9a960',
+          life: 500 + Math.random() * 300, t: 0,
+          c: '#d9a960',
+          ang: a,
         });
       }
     }
@@ -960,9 +978,37 @@
         for (i = 0; i < parts.length; i++) {
           p = parts[i];
           actx.globalAlpha = Math.max(0, 1 - p.t / p.life);
-          actx.fillStyle = p.c;
-          var sz = p.sz || 4; // P17: dust puffs draw bigger than sparks
-          actx.fillRect(p.x - sz / 2, p.y - sz / 2, sz, sz);
+          if (p.kind === 'slash') {
+            // P24: sword-hit effect — a stroked arc sweeping across the
+            // impact point, gold/white, fading over ~150ms. Cosmetic only.
+            var prog = p.t / p.life;
+            var rad = p.r * Math.min(1, prog * 1.8);
+            actx.strokeStyle = p.c;
+            actx.lineWidth = 6;
+            actx.beginPath();
+            actx.arc(p.x, p.y, rad, p.a0, p.a0 + Math.PI, false);
+            actx.stroke();
+          } else if (p.kind === 'spark') {
+            // Spark spray — short LINES radiating from the impact point,
+            // never squares (P24).
+            var len = (p.sz || 4) * 3 + 4;
+            var dx = Math.cos(p.ang) * len / 2;
+            var dy = Math.sin(p.ang) * len / 2;
+            actx.strokeStyle = p.c;
+            actx.lineWidth = 2;
+            actx.beginPath();
+            actx.moveTo(p.x - dx, p.y - dy);
+            actx.lineTo(p.x + dx, p.y + dy);
+            actx.stroke();
+          } else {
+            // Dust puffs (and celebration rain) draw as soft circles —
+            // never squares (P24).
+            var sz = p.sz || 4;
+            actx.fillStyle = p.c;
+            actx.beginPath();
+            actx.arc(p.x, p.y, sz / 2, 0, 6.283);
+            actx.fill();
+          }
         }
         actx.globalAlpha = 1;
         actx.restore();

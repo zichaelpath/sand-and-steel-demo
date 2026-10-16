@@ -5,7 +5,7 @@
  *    time, non-stacking). Scheduled choreography totals, HP tracks, finals,
  *    and the readability hold are untouched — the outcome resolves exactly
  *    as the RGS dealt it, ~50ms later on the wall clock.
- *  - Dust puffs are sand-colored canvas rects at the impact point. They
+ *  - Dust puffs are sand-colored circles at the impact point. They
  *    never cover the fighters' end states or the result banner.
  *  - The camera nudge is a small (±12px, -4px up) decaying offset applied
  *    beside the existing shake. It cannot obscure the result.

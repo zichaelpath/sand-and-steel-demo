@@ -154,10 +154,43 @@
       var dw = FRAME * f.scale;
       var dh = FRAME * f.scale;
       drawFrame(ctx, f.img, frameNumber(f), f.x - dw / 2, f.y - 114 * f.scale, dw, dh);
+      // P24: shaped hit-flash. The white is composited over the sprite's own
+      // silhouette (source-atop) instead of a plain rect over the whole
+      // frame — the flash always matches the current art. No rectangles in
+      // the hit path: the flash layer is the offscreen copy itself.
       if (f.flash > 0) {
-        ctx.fillStyle = 'rgba(255,255,255,' + (f.flash * 0.6).toFixed(3) + ')';
-        ctx.fillRect(f.x - dw / 2, f.y - 114 * f.scale, dw, dh);
+        var px = f.x - dw / 2;
+        var py = f.y - 114 * f.scale;
+        if (ensureFlashCanvas(f, dw, dh)) {
+          var flash = f.flashCanvas;
+          var fc = flash.getContext('2d');
+          if (fc) {
+            fc.clearRect(0, 0, dw, dh);
+            drawFrame(fc, f.img, frameNumber(f), 0, 0, dw, dh);
+            fc.globalCompositeOperation = 'source-atop';
+            fc.fillStyle = '#fff';
+            fc.fillRect(0, 0, dw, dh);
+            ctx.globalAlpha = Math.max(0, f.flash) * 0.8;
+            ctx.drawImage(flash, px, py);
+            ctx.globalAlpha = 1;
+          }
+        }
       }
+    }
+
+    // Lazily build (once per fighter) the offscreen the hit-flash is drawn
+    // from. Returns false when no 2D context is available (headless node).
+    function ensureFlashCanvas(f, dw, dh) {
+      if (f.flashCanvas && f.flashCanvas.width === dw && f.flashCanvas.height === dh) {
+        return true;
+      }
+      if (typeof document === 'undefined' || !document.createElement) return false;
+      var c = document.createElement('canvas');
+      c.width = dw;
+      c.height = dh;
+      if (!c.getContext) return false;
+      f.flashCanvas = c;
+      return true;
     }
 
     function drawShadow(ctx, f, rx, ry) {
