@@ -404,6 +404,9 @@ body.armed #arena { border-color: #ff7a2e; box-shadow: 0 0 14px rgba(255, 120, 2
 }
 #armed-confirm[hidden], #resume[hidden], #auth-error[hidden], #help-overlay[hidden] { display: none; }
 
+/* Mobile-only UI (shown only within the max-width:700px query below). */
+#icon-strip, #deck-mobile, #statusbar { display: none; }
+
 #auth-error { border-color: var(--danger); margin: 0.6rem 0; }
 #resume { margin: 0.6rem 0; }
 
@@ -529,189 +532,301 @@ code { background: var(--panel-soft); color: var(--cream); padding: 0 0.3rem; bo
 }
 
 /* --- responsive: mobile portrait (max-width:700px) ---
- * Mockup A: sticky fight + thumb bar. The page is ONE fixed-height flex
- * column — header / arena / status / chips / bet bar — and NOTHING scrolls
- * (the arena itself is pinned and never leaves the viewport, turbo or not).
- * The bet bar is always thumb-reachable. Desktop (≥701px) keeps the
- * side-panel layout untouched. */
+ * Mockup A (betting): full-bleed arena ~60% of viewport, slim icon strip
+ * overlaid at the arena's bottom edge, then a borderless control deck
+ * (segmented Trial/Armed toggle, ½ • amount • 2x bet row, one big full-width
+ * gold FIGHT button, compact balance / last-win row).
+ * Mockup C (mid-fight): bet deck collapses, arena expands to ~85%, a slim
+ * status bar at the bottom shows round #, balance, result text and HP pips.
+ * One uniform dark background, gold + blood-red accents, no card borders,
+ * no app header bar, no panel chrome, NO page scroll at either 390x844 or
+ * 375x667. Desktop (≥701px) keeps the side-panel layout untouched. */
 @media (max-width: 700px) {
-  html { scroll-padding-top: 0; }
-  body { min-height: 0; }
+  html { scroll-padding-top: 0; overflow: hidden; }
+  body { min-height: 0; background: #0e0b08 !important; color: #e8dcc4; }
 
-  /* Fixed single-screen column; the last padding keeps the FIGHT button
-     clear of the iOS home indicator (safe-area-inset-bottom). */
+  /* Full-bleed single-screen column; nothing scrolls. */
   #page {
-    height: 100vh;
     height: 100dvh;
     display: flex;
     flex-direction: column;
-    gap: 0.3rem;
-    padding: 0.4rem 0.5rem calc(0.4rem + env(safe-area-inset-bottom));
+    padding: 0;
     overflow: hidden;
+    background: #0e0b08;
   }
 
-  /* Slim header: title / balance pill / mute — one compact row. */
-  #topbar {
-    position: static;
-    flex: 0 0 auto;
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 0.3rem 0.45rem;
-    padding: 0.3rem 0.5rem;
-  }
-  /* Mute/turbo were pushed off-screen (x=442/500 at 390px). Two-row header:
-     row 1 = brand + balance, row 2 = actions full-width, all tappable. */
-  .top-actions { margin-left: 0; flex: 1 1 100%; justify-content: flex-start; }
-  .mute { padding: 0.25rem 0.15rem; }
-  .mute input { width: 1.05rem; height: 1.05rem; vertical-align: -0.2rem; }
-  .brand h1 { font-size: 0.95rem; white-space: nowrap; }
-  .brand .tagline { display: none; }
-  .balance-pill { flex: 0 0 auto; margin: 0; padding: 0.2rem 0.6rem; font-size: 0.85rem; }
-  .top-actions { margin-left: auto; gap: 0.35rem; }
-  .top-actions .btn-small { min-height: 30px; padding: 0.15rem 0.5rem; font-size: 0.75rem; }
-  .mute { font-size: 0.85rem; }
+  /* NO app header bar on mobile: mute / turbo / help live in the icon strip
+     overlaid on the arena instead. */
+  #topbar { display: none; }
 
-  /* Center is the flex column: arena first, then chips, then bet bar.
-     #layout itself is the flex item of #page (it wraps #center). */
-  #layout {
-    flex-grow: 1;
-    flex-shrink: 1;
-    min-height: 0;
-    width: 100%;
-  }
+  #layout { flex: 1 1 auto; min-height: 0; width: 100%; }
   #center {
-    flex-grow: 1;
-    flex-shrink: 1;
+    flex: 1 1 auto;
     width: 100%;
-    /* Constrain to #layout's box so the inner regions can always shrink
-       (flex-basis alone was not enough in this engine build). */
     height: 100%;
     min-height: 0;
     display: flex;
     flex-direction: column;
-    gap: 0.35rem;
   }
 
-  /* Arena pinned to the top: flex-grow, never scrolls, min ~40% viewport. */
+  /* Fighter strip hidden on mobile (mockup A has no picker; the cosmetic
+     fighter pref persists to localStorage and the default fighter is used). */
+  #fighters { display: none; }
+
+  /* Arena: grows to fill the space left by the deck / status bar. */
   #stage {
-    order: 1;
-    flex-grow: 1;
-    flex-shrink: 1;
-    min-height: calc(40dvh);
+    flex: 1;
+    min-height: 35%;
     min-width: 0;
+    width: 100%;
     display: flex;
     flex-direction: column;
     overflow: hidden;
     position: relative;
+    background: #0e0b08;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    margin: 0;
   }
-  #stage h2 { font-size: 0.85rem; margin-bottom: 0.25rem; }
-  #arena-wrap { flex: 1 1 auto; min-height: 0; position: relative; line-height: 0; }
+  /* Fight mode (mockup C): the arena claims nearly all the vertical space. */
+  #center.fight-mode #stage { min-height: 55%; }
+
+  #stage h2 { display: none; } /* no arena header on mobile */
+  #arena-wrap { flex: 1 1 auto; min-height: 0; position: relative; line-height: 0; width: 100%; }
   #arena {
     width: 100%;
-    height: auto;
-    max-height: 100%;
-    image-rendering: pixelated;
-    border: 2px solid var(--gold-deep);
-    border-radius: 8px;
-    background: #f0c979;
-  }
-  #versus { font-size: 0.82rem; margin: 0.15rem 0 0; }
-  #stage-line { font-size: 0.85rem; min-height: 1.2em; margin: 0.1rem 0 0; }
-  #result { min-height: 1.6em; font-size: 0.95rem; margin: 0.1rem 0 0; }
-
-  /* Status line: one compact line directly under the pinned arena. */
-  #status {
-    font-size: 0.8rem;
-    margin: 0.15rem 0 0;
-    min-height: 1.1em;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  /* Chips row: fighter selector + Trial/Armed toggle, one-tap chips.
-     Fixed height (shrink 0): it is a compact strip above the bet bar. */
-  #fighters {
-    order: 2;
-    flex-grow: 0;
-    flex-shrink: 0;
-    flex-basis: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-    padding: 0.3rem 0.5rem;
-  }
-  #fighters h2 { display: none; } /* the chips row label would crowd the fight bar */
-  #fighters .cosmetic-tag { display: none; }
-  #fighter-cards {
-    display: flex;
-    flex-wrap: nowrap;
-    gap: 0.4rem;
-    overflow-x: auto;
-    padding-bottom: 0;
-  }
-  .fighter-card { flex: 0 0 auto; min-height: 34px; padding: 0.1rem 0.4rem; }
-  .fighter-card canvas { width: 30px; height: 30px; }
-  .fighter-card .fname { font-size: 0.68rem; }
-  #fighters .hint { display: none; }
-  /* Compact one-tap mode chips (moved beside the fighters on mobile). */
-  .mode-btn {
-    flex: 0 0 auto;
-    min-height: 34px;
-    padding: 0.25rem 0.7rem;
-    font-size: 0.8rem;
-    border-radius: 999px;
-    white-space: nowrap;
-  }
-
-  /* Sticky bottom bet bar: stake stepper + big FIGHT, always visible. */
-  #betpanel {
-    order: 3;
-    flex-grow: 0;
-    flex-shrink: 1;
-    flex-basis: auto;
+    height: 100%;
     min-height: 0;
+    display: block;
+    border: none !important;
+    border-radius: 0 !important;
+    background: #0b0906 !important;
+    image-rendering: pixelated;
+    aspect-ratio: auto !important;
+  }
+
+  /* Icon strip overlaid at the arena's bottom edge (mockup A / C). */
+  #icon-strip {
+    display: flex;
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    gap: 10px;
+    z-index: 30;
+  }
+  .icon-btn {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: rgba(8,6,4,.72);
+    border: 1px solid rgba(217,169,96,.35);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+  }
+  .icon-btn svg { width: 20px; height: 20px; stroke: #d9a960; fill: none;
+    stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .icon-btn:active { background: rgba(217,169,96,.2); }
+
+  /* Result banner overlay inside the arena. */
+  #banner { left: 50%; top: 32%; transform: translateX(-50%); width: 90%; }
+
+  /* Betting-state info lines stay compact and never push the arena taller. */
+  #versus, #status, #stage-line, #result { display: none; }
+
+  /* Control deck: borderless, dark, below the arena (mockup A). */
+  #betpanel {
+    flex: 0 0 auto;
+    min-height: 0;
+    width: 100%;
     display: flex;
     flex-direction: column;
-    gap: 0.3rem;
-    padding: 0.35rem 0.5rem calc(0.35rem + env(safe-area-inset-bottom));
-    position: relative;
-    overflow: visible;
+    background: #0e0b08;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 12px 12px 14px;
+    gap: 8px;
   }
   #betpanel h2 { display: none; }
-  /* The cost line is supplementary; hiding it keeps the FIGHT button
-     inside the shrunken bet bar at every viewport height. */
-  #cost-line { display: none; }
-  /* Balance/bet meters live in the slim header balance pill on mobile. */
   #deck-meters { display: none; }
-  /* The mode toggle moved into the chips row; the empty row hides. */
-  #deck-controls .row { display: none; }
-  #betpanel select { min-height: 22px; padding: 0.1rem; font-size: 0.8rem; }
-  /* The display-currency select is display-only; hiding it keeps the FIGHT
-     button inside the shrunken bet bar at every viewport height. */
-  #currency { display: none; }
-  .stepper { gap: 0.15rem; }
-  .step-btn { flex: 0 0 24px; min-height: 20px; font-size: 0.9rem; }
-  .bet-btn {
-    min-height: 40px;
-    padding: 0.4rem 0.8rem;
-    font-size: 1.1rem;
+  #deck-controls { display: none; } /* desktop stepper / mode row / cost line */
+  #cost-line { display: none; }
+  #bet { width: 100%; }
+
+  /* Mobile deck (mockup A): flattened into #betpanel via display:contents
+     so the FIGHT button can sit below the bet controls - mockup A order:
+     mode toggle, bet row, FIGHT, balance. Shown in betting, hidden mid-fight. */
+  #deck-mobile { display: contents; }
+  #deck-mobile .seg { order: 1; }
+  #deck-mobile .bet-row { order: 2; }
+  #betpanel #bet { order: 3; }
+  #deck-mobile .meta { order: 4; }
+  #betpanel #armed-confirm { order: 5; }
+  #center.fight-mode #deck-mobile { display: none; }
+  /* Mid-fight (mockup C): the FIGHT button collapses away with the deck -
+     only the slim status bar remains. */
+  #center.fight-mode #betpanel #bet { display: none; }
+
+  /* Segmented Trial/Armed toggle (mockup A). The Trial/Armed buttons are
+     moved here by app.js on mobile. */
+  .seg {
+    display: flex;
+    background: #171208;
+    border: 1px solid #2c2314;
+    border-radius: 12px;
+    padding: 4px;
   }
-  /* Armed confirm gate floats above the bet bar, never covering the FIGHT
-     button itself (the fight stays tappable at all times). */
-  #armed-confirm {
-    position: absolute;
-    left: 0.4rem;
-    right: 0.4rem;
-    bottom: calc(100% + 0.4rem);
-    z-index: 20;
-    margin: 0;
-    max-height: 40dvh;
-    overflow-y: auto;
+  .seg .mode-btn {
+    flex: 1;
+    text-align: center;
+    padding: 9px 0;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: #8a7a5c;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+  }
+  .seg .mode-btn.active {
+    background: linear-gradient(180deg,#3a2c14,#241b0c);
+    color: #f0c96a;
+    box-shadow: inset 0 0 0 1px rgba(217,169,96,.5);
   }
 
-  /* Debug config strip: hidden on mobile (it would break the no-scroll
-     budget; app.js still updates its textContent). */
+  /* Bet-amount row: ½ • amount • 2x (mockup A). */
+  .bet-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .step {
+    width: 56px;
+    border-radius: 10px;
+    border: 1px solid #2c2314;
+    background: #171208;
+    color: #d9a960;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .step:active { background: rgba(217,169,96,.15); }
+  .amount {
+    flex: 1;
+    text-align: center;
+    background: #050403;
+    border: 1px solid #2c2314;
+    border-radius: 10px;
+    padding: 12px 0;
+    font-size: 20px;
+    font-weight: 800;
+    color: #f0c96a;
+  }
+
+  /* One big full-width gold FIGHT button (mockup A). */
+  .bet-btn {
+    width: 100%;
+    height: 58px;
+    border: none;
+    border-radius: 14px;
+    background: linear-gradient(180deg, #f5d67b 0%, #d9a960 55%, #b07f2e 100%);
+    color: #1a1206;
+    font-size: 22px;
+    font-weight: 900;
+    letter-spacing: 6px;
+    box-shadow: 0 4px 18px rgba(217,169,96,.35);
+    cursor: pointer;
+    padding: 0;
+  }
+  .bet-btn:active:not(:disabled) { filter: brightness(1.08); }
+  .bet-btn:disabled { opacity: 0.55; cursor: default; filter: none; }
+
+  /* Compact balance / last-win row (mockup A). */
+  .meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    color: #8a7a5c;
+  }
+  .meta strong {
+    display: block;
+    font-size: 16px;
+    color: #e8dcc4;
+    letter-spacing: 0;
+    margin-top: 3px;
+    font-weight: 700;
+  }
+  .meta .win strong { color: #f0c96a; }
+
+  /* Armed confirm gate floats above the deck on mobile. */
+  #armed-confirm {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    bottom: calc(100% + 10px);
+    z-index: 25;
+    margin: 0;
+    background: #171208;
+    border: 1px solid #2c2314;
+    border-radius: 10px;
+    padding: 8px 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,.6);
+  }
+  #armed-confirm p { margin: 0 0 6px; font-size: 0.85rem; color: #e8dcc4; }
+
+  /* Fight-mode status bar (mockup C): round #, balance, result text, HP pips.
+     Hidden while betting, shown only mid-fight. */
+  #statusbar { display: none; }
+  #center.fight-mode #statusbar { display: block; }
+  #statusbar {
+    flex: 0 0 auto;
+    width: 100%;
+    background: #0b0805;
+    border-top: 1px solid rgba(217,169,96,.3);
+    padding: 10px 14px 12px;
+    color: #e8dcc4;
+  }
+  #statusbar .row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: #8a7a5c;
+    margin-bottom: 6px;
+  }
+  #statusbar .row .bal {
+    font-size: 14px;
+    color: #e8dcc4;
+    letter-spacing: 0.5px;
+    font-weight: 700;
+  }
+  #statusbar .status {
+    font-size: 15px;
+    font-weight: 700;
+    color: #f0c96a;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+    min-height: 1.2em;
+  }
+  #statusbar .hp {
+    display: flex;
+    gap: 6px;
+  }
+  #statusbar .hp i {
+    flex: 1;
+    height: 5px;
+    border-radius: 3px;
+    background: #2c2314;
+  }
+  #statusbar .hp i.full {
+    background: linear-gradient(90deg,#a31621,#d9a960);
+  }
+  #statusbar .hp i.half {
+    background: linear-gradient(90deg,#a31621 50%,#2c2314 50%);
+  }
+
+  #armed-confirm[hidden], #resume[hidden], #auth-error[hidden], #help-overlay[hidden] { display: none; }
   #config { display: none; }
+  #currency { display: none; }
 }

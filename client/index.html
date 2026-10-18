@@ -38,7 +38,8 @@
 
     <!-- Single-screen desktop: slim fighter strip across the top, then one
          row: [bet control deck side panel | ARENA hero]. Mobile portrait
-         keeps the stacked order (arena, strip, deck). All game IDs
+         (max-width:700px) keeps the stacked order (arena, strip, deck) and
+         follows mockup A (betting) / mockup C (mid-fight). All game IDs
          unchanged (app.js contract). -->
     <main id="layout" class="casino">
       <div id="center">
@@ -54,11 +55,21 @@
             <canvas id="arena" width="960" height="540"
               aria-label="Arena bout between your gladiator and the house champion"></canvas>
             <div id="banner" hidden></div>
+            <!-- Mobile: slim icon strip overlaid at the arena's bottom edge
+                 (mute / turbo / help). Hidden on desktop, where these live
+                 in the top bar. -->
+            <div id="icon-strip" aria-label="Arena controls">
+              <button type="button" class="icon-btn" id="icon-mute" aria-label="Mute" title="Mute">
+                <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 4V5L8 9H3z"/><path d="M10 3L5 5l5 6M16 3L11 5l5 6z"/></svg>
+              </button>
+              <button type="button" class="icon-btn" id="icon-turbo" aria-label="Turbo" title="Turbo">
+                <svg viewBox="0 0 24 24"><path d="M8 5l14 7L8 19z"/></svg>
+              </button>
+              <button type="button" class="icon-btn" id="icon-help" aria-label="Help / Paytable" title="Help">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><circle cx="12" cy="7.5" r="0.5"/></svg>
+              </button>
+            </div>
           </div>
-          <!-- Mobile portrait (mockup A): the status line lives directly under
-               the pinned arena, so bout state/result summary never scroll
-               away. On desktop it simply sits at the bottom of the stage
-               column. -->
           <p id="status" role="status">Booting…</p>
           <p id="versus" aria-live="polite"></p>
           <p id="stage-line" aria-live="polite"></p>
@@ -100,12 +111,33 @@
               <button id="armed-yes" type="button" class="btn-small">Confirm Armed Bout</button>
               <button id="armed-no" type="button" class="btn-small">Cancel</button>
             </div>
-            <button id="bet" type="button" class="bet-btn">Fight</button>
           </div>
-          <p class="hint">Stub harness: open with <code>?stub=1</code> (add
-            <code>&amp;hang=1</code> to test refresh recovery).
-            <a href="./debug.html">Math debug page</a></p>
+          <button id="bet" type="button" class="bet-btn">Fight</button>
+
+          <!-- Mobile portrait deck (mockup A): segmented Trial/Armed toggle,
+               bet-amount row (½ • amount • 2x), one big full-width FIGHT
+               button, compact balance / last-win row. Hidden on desktop. -->
+          <div id="deck-mobile">
+            <div class="seg" role="group" aria-label="Bout mode"></div>
+            <div class="bet-row" role="group" aria-label="Bet amount">
+              <button type="button" class="step" id="bet-half">&frac12;</button>
+              <div class="amount" id="bet-amount">$1.00</div>
+              <button type="button" class="step" id="bet-double">2x</button>
+            </div>
+            <div class="meta">
+              <div>BALANCE<strong id="deck-balance-mobile">—</strong></div>
+              <div class="win">LAST WIN<strong id="deck-win-mobile">—</strong></div>
+            </div>
+          </div>
         </section>
+
+        <!-- Mobile fight-mode status bar (mockup C): round #, balance,
+             result text, HP pips. Shown only while a bout is active. -->
+        <div id="statusbar">
+          <div class="row"><span>ROUND</span><span id="sb-round" class="bal">—</span><span>BALANCE</span><span id="sb-balance" class="bal">—</span></div>
+          <div class="status" id="sb-status">—</div>
+          <div class="hp" id="sb-hp"></div>
+        </div>
       </div>
     </main>
 
@@ -117,7 +149,6 @@
       </div>
     </div>
 
-    <pre id="config">—</pre>
   </div>
   <script src="../math/bout.js"></script>
   <script src="./clips.js"></script>
@@ -129,4 +160,5 @@
   <script src="./juice.js"></script>
   <script src="./app.js"></script>
 </body>
+
 </html>

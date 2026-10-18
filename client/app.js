@@ -316,6 +316,7 @@
       balance: null, betConfig: null, resume: null,
       mode: 'TRIAL', baseBet: 0, displayCurrency: launch.currency || 'USD',
       busy: false, authenticated: false, boutActive: false,
+      currentRoundId: null,
     };
 
     // --- static refs ---
@@ -339,7 +340,13 @@
       costLine = $('cost-line'),
       helpOpen = $('help-open'), helpOverlay = $('help-overlay'),
       helpBody = $('help-body'), helpClose = $('help-close'),
-      arenaCv = $('arena'), bannerEl = $('banner');
+      arenaCv = $('arena'), bannerEl = $('banner'),
+      centerEl = $('center'),
+      betHalf = $('bet-half'), betDouble = $('bet-double'), betAmount = $('bet-amount'),
+      iconMute = $('icon-mute'), iconTurbo = $('icon-turbo'), iconHelp = $('icon-help'),
+      statusbar = $('statusbar'), sbRound = $('sb-round'), sbBalance = $('sb-balance'),
+      sbStatus = $('sb-status'), sbHp = $('sb-hp'),
+      deckBalanceMobile = $('deck-balance-mobile'), deckWinMobile = $('deck-win-mobile');
 
     // P15: Web Audio engine (SFX + crowd; P16 adds the music loop). The
     // mute pref silences EVERYTHING via the master gain — and the engine
@@ -471,11 +478,13 @@
     var hpShown = { player: 5, champ: 5, max: 5 };
     function resetHp(max) {
       hpShown.player = max; hpShown.champ = max; hpShown.max = max;
+      renderStatusbar();
     }
     function applyHp(hpAfter) {
       if (!hpAfter) return;
       hpShown.player = hpAfter.player;
       hpShown.champ = hpAfter.champ;
+      renderStatusbar();
     }
     function drawHpBar(ctx, x, yTop, frac, label) {
       var W = 150, H = 14;
@@ -758,6 +767,7 @@
         });
         frozenCrowdT = crowdT;
         state.boutActive = true;
+        setFightMode(true);
         boutMode = mode || state.mode;
         hideBanner();
         resetStance(false);
@@ -784,6 +794,7 @@
               if (ev.action === 'banner') {
                 boutClock = null;
                 state.boutActive = false;
+                setFightMode(false);
                 resolve(plan.outcome);
               } else {
                 applyAction(ev, plan);
@@ -814,6 +825,7 @@
         if (isFirst) {
           frozenCrowdT = crowdT;
           state.boutActive = true;
+          setFightMode(true);
           boutMode = mode || state.mode;
           hideBanner();
           resetStance(false);
@@ -848,7 +860,10 @@
               var ev = evs.shift();
               if (ev.action === 'banner') {
                 boutClock = null;
-                if (stagePlan.result !== 'draw') state.boutActive = false;
+                if (stagePlan.result !== 'draw') {
+                  state.boutActive = false;
+                  setFightMode(false);
+                }
                 resolve(stagePlan.result === 'draw' ? 'draw' : 'terminal');
               } else {
                 if (isFirst && boutMode === 'ARMED' && ev.action === 'attack') {
@@ -1100,18 +1115,18 @@
     renderCards();
 
     /* Mobile portrait (mockup A, max-width:700px): move the Trial/Armed
-     * mode toggle into the compact chips row so it stays one-tap
-     * reachable beside the fighter selector. Desktop keeps the toggle in
-     * the bet-deck panel untouched; the listeners are bound to the same
+     * mode toggle into the segmented control inside the mobile bet deck so
+     * it stays beside the bet amount. Desktop keeps the toggle in the
+     * bet-deck panel untouched; the listeners are bound to the same
      * elements either way, so the move is purely presentational. */
     try {
       if (window.matchMedia &&
         window.matchMedia('(max-width: 700px)').matches) {
-        var fightersPanel = document.getElementById('fighters');
-        var anchor = cardsEl ? cardsEl.nextSibling : null;
-        if (fightersPanel && anchor) {
-          fightersPanel.insertBefore(modeTrial, anchor);
-          fightersPanel.insertBefore(modeArmed, anchor);
+        var deckMobile = document.getElementById('deck-mobile');
+        var seg = deckMobile ? deckMobile.querySelector('.seg') : null;
+        if (seg) {
+          seg.appendChild(modeTrial);
+          seg.appendChild(modeArmed);
         }
       }
     } catch (e) {}
@@ -1190,6 +1205,50 @@
           ? fmt(state.balance.amount, state.displayCurrency)
           : '—';
       }
+      var deckBalMob = deckBalanceMobile;
+      if (deckBalMob) {
+        deckBalMob.textContent = state.balance
+          ? fmt(state.balance.amount, state.displayCurrency)
+          : '—';
+      }
+    }
+
+    // Mobile fight-mode status bar (mockup C). Keeps round #, balance,
+    // current result text and the player HP pips in sync.
+    function renderStatusbar() {
+      if (!statusbar) return;
+      try {
+        if (sbRound) sbRound.textContent = state.currentRoundId
+          ? '#' + state.currentRoundId : '—';
+        if (sbBalance) sbBalance.textContent = state.balance
+          ? fmt(state.balance.amount, state.displayCurrency) : '—';
+        if (sbStatus) sbStatus.textContent = resultEl ? resultEl.textContent : '—';
+        if (sbHp && state.betConfig) {
+          var max = hpShown.max || 5;
+          var cur = Math.max(0, Math.min(max, hpShown.player));
+          sbHp.innerHTML = '';
+          for (var i = 0; i < max; i++) {
+            var pip = document.createElement('i');
+            if (cur >= i + 1) pip.className = 'full';
+            else if (cur >= i + 0.5) pip.className = 'half';
+            sbHp.appendChild(pip);
+          }
+        }
+      } catch (e) {}
+    }
+
+    // Switch between the betting deck (mockup A) and the fight status bar
+    // (mockup C). Purely presentational — game state is untouched.
+    function setFightMode(fight) {
+      try {
+        if (!centerEl) return;
+        if (fight) {
+          centerEl.classList.add('fight-mode');
+        } else {
+          centerEl.classList.remove('fight-mode');
+        }
+      } catch (e) {}
+      renderStatusbar();
     }
 
     function renderStakeSelector() {
@@ -1207,6 +1266,18 @@
       state.baseBet = (state.resume && cfg.betLevels.indexOf(state.resume.amount) >= 0)
         ? state.resume.amount : def;
       stakeSel.value = String(state.baseBet);
+      renderBetAmount();
+    }
+
+    // Mobile bet-amount readout (mockup A: ½ • amount • 2x row).
+    function renderBetAmount() {
+      try {
+        if (betAmount && state.betConfig) {
+          betAmount.textContent = fmt(state.baseBet, state.displayCurrency);
+        } else if (betAmount) {
+          betAmount.textContent = '—';
+        }
+      } catch (e) {}
     }
 
     function currentTotal() {
@@ -1242,6 +1313,7 @@
       }
       renderCostLine();
       renderDeckMeters();
+      renderBetAmount();
     }
 
     // P17b: control-deck meters — current bet + last win always visible.
@@ -1305,8 +1377,60 @@
       confirmBar.hidden = true;
       renderBetButton();
     }
+    // Mobile: halve / double the bet, snapping to the nearest valid bet
+    // level from the live bet config, clamped at min/max. Purely a UI
+    // control — the RGS still validates the final stake before accepting it.
+    function snapBetLevel(target) {
+      if (!state.betConfig || !state.betConfig.betLevels.length) return state.baseBet;
+      var levels = state.betConfig.betLevels;
+      var lo = state.betConfig.minBet, hi = state.betConfig.maxBet;
+      var t = Math.max(lo, Math.min(hi, target));
+      var best = levels[0];
+      for (var i = 1; i < levels.length; i++) {
+        if (Math.abs(levels[i] - t) < Math.abs(best - t)) best = levels[i];
+      }
+      return best;
+    }
+    function doBetHalf() {
+      if (!state.betConfig || state.busy) return;
+      var nv = snapBetLevel(state.baseBet / 2);
+      if (nv === state.baseBet) return;
+      uiSound('click');
+      state.baseBet = nv;
+      stakeSel.value = String(state.baseBet);
+      confirmBar.hidden = true;
+      renderBetButton();
+    }
+    function doBetDouble() {
+      if (!state.betConfig || state.busy) return;
+      var nv = snapBetLevel(state.baseBet * 2);
+      if (nv === state.baseBet) return;
+      uiSound('click');
+      state.baseBet = nv;
+      stakeSel.value = String(state.baseBet);
+      confirmBar.hidden = true;
+      renderBetButton();
+    }
     if (betMinus) betMinus.addEventListener('click', function () { stepStake(-1); });
     if (betPlus) betPlus.addEventListener('click', function () { stepStake(1); });
+    if (betHalf) betHalf.addEventListener('click', doBetHalf);
+    if (betDouble) betDouble.addEventListener('click', doBetDouble);
+    // Mobile icon strip (mockup A): mute / turbo / help overlaid on the
+    // arena. These drive the same controls as the top bar on desktop.
+    if (iconMute && muteBox) iconMute.addEventListener('click', function () {
+      uiSound('click');
+      muteBox.checked = !muteBox.checked;
+      muteBox.dispatchEvent(new Event('change', { bubbles: false }));
+    });
+    if (iconTurbo && turboBox) iconTurbo.addEventListener('click', function () {
+      uiSound('click');
+      turboBox.checked = !turboBox.checked;
+      turboBox.dispatchEvent(new Event('change', { bubbles: false }));
+    });
+    if (iconHelp) iconHelp.addEventListener('click', function () {
+      uiSound('click');
+      if (helpOverlay) { helpOverlay.hidden = false; if (helpClose) helpClose.focus(); }
+    });
     currencySel.addEventListener('change', function () {
       // Display only: the integer stake sent to the RGS never changes.
       uiSound('click');
@@ -1359,6 +1483,7 @@
         : 'LOSS — ' + fname + ' falls in the sand. DEFEAT — no payout.';
       resultEl.className = won ? 'win' : 'loss';
       renderDeckWin(won ? round.payout : 0);
+      renderStatusbar();
       if (won) spawnGoldRain(); // win-styled effects exist ONLY on wins
     }
 
@@ -1389,8 +1514,12 @@
       stageLine('');
       resultEl.textContent = '';
       resultEl.className = '';
+      state.currentRoundId = null;
+      setFightMode(false);
+      renderStatusbar();
       try {
         var res = await backend.play(state.baseBet, state.mode);
+        state.currentRoundId = res.round.betID;
         // Balance comes from the RGS only — never computed locally.
         state.balance = res.balance;
         renderBalance();
