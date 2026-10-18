@@ -27,6 +27,29 @@ Math constants untouched since certification (`math/bout.js` frozen;
 `bout.test.js` freeze tests green). `math/simulator.py` was v1-stale and
 was rewritten to v2 importing the shipped tables (P18) — docs fix only.
 
+### 1b. Math verification — v3 addendum (2026-10-18)
+
+Volatility-compression retune per `docs/math-v3.md`: max win 500x Trial /
+750x Armed, theoretical RTP 96.50% both modes, hit rate 44.00%, SD 4.89,
+"nothing or 2x" share 64.00%. Verified against the same §1 bands.
+
+| # | Item (band per ground-truth §8) | Evidence | Verdict |
+|---|---|---|---|
+| 1.1 | Trial RTP in [96.0%, 96.7%] | `docs/math-v3.md` + `math/simulator.py`: theory **96.5000%** (exact EV from `math/bout.js` via node import; freeze test `|bout.theoreticalRTP('TRIAL') − 0.965| < 1e-9`) | PASS |
+| 1.2 | Armed RTP in [96.0%, 96.7%] | Same log: theory **96.5000%** | PASS |
+| 1.3 | Cross-mode gap < 0.5% | Same: theoretical **0.0000%**, empirical 10M-bout **0.0000%** (exact 1.5x scaling asserted at load) | PASS |
+| 1.4 | Empirical RTP within tolerance of 96.50% | 10M bouts/mode: **96.7959%**, err +0.296% inside the 5SE adaptive tol (0.788%) and 1.5pp cap | PASS |
+| 1.5 | Max win realistically obtainable (< 1 in 10M) | 500x Trial (750x Armed) at **1 in 18,553**; **570 max-wins observed** in the 10M run (~539 expected) | PASS |
+| 1.6 | Hit rate no rarer than 1 in 50 | Non-zero-win rate **44.00%** (~1 in 2.27), empirical 44.01% | PASS |
+| 1.7 | Base volatility SD ≥ 0.6 per 1.0 bet | Exact **4.89** (v2 was 7.73) | PASS |
+| 1.8 | Max payout mult ≤ 1,000,000x | 750x (Armed) | PASS |
+| 1.9 | Max cost mult ≤ 50,000x; base mode 1.0x | 1.5x max; Trial exactly 1.0x | PASS |
+| 1.10 | Max win actually achievable in-game | Theoretical **1 in 18,553**; live forced-win evidence (P20-style) to be captured at submission | PASS (theory) |
+
+`math/bout.js` re-certified to v3; `bout.test.js` freeze tests re-based to v3
+and green (24/24). `math/simulator.py` unchanged — it imports the shipped
+tables, so any table drift fails loudly at load.
+
 ## 2. Statelessness (strictly stateless rounds)
 
 | # | Item | Evidence | Verdict |

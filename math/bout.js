@@ -1,14 +1,18 @@
-/* SAND & STEEL — certified bout math v2 (draw-escalation model, 2026-10-15).
+/* SAND & STEEL — certified bout math v3 (draw-escalation model, 2026-10-18).
  *
  * CERTIFIED CONSTANTS — changing ANY value below changes the certified math
  * and requires Dietrich's explicit approval + simulator re-run + re-submission.
- * See math/SPEC_V2.md (design record), math/README.md, math/simulator.py.
+ * See math/README.md, docs/math-v3.md (design record), math/simulator.py.
  *
  * Model: one bout = one RGS round (stateless), fought in up to 3 stages.
  * Each stage's probabilities are CONDITIONAL on reaching that stage.
  * A stage ends narrow_win | decisive_win | draw | loss. A draw banks a
  * guaranteed floor (1x after stage 1, 5x after stage 2) and advances to the
  * next stage with fresh HP; stage 3 is final. Losses pay the banked floor.
+ *
+ * Volatility-compression retune (v3): max win 500x (Trial) / 750x (Armed)
+ * instead of 1000x/1500x, fatter middle tiers (new 50x stage-2 decisive),
+ * higher hit rate, lower volatility. Theoretical RTP 96.50% both modes.
  *
  * On Stake Engine the RNG lives in the RGS: one /wallet/play round resolves
  * ALL stages (one [0,1) draw per stage reached), and the round `state`
@@ -38,22 +42,22 @@
   // Order per stage for draw mapping: narrowWin, decisiveWin, draw, loss.
   var TRIAL_STAGES = [
     { // Stage 1 — 5 HP each
-      narrowWin:   { p: 0.3280284192, mult: 2 },
-      decisiveWin: { p: 0.0172646536, mult: 8 },
-      draw:        { p: 0.04 },
-      loss:        { p: 0.6147069272, mult: 0 },
+      narrowWin:   { p: 0.08,          mult: 2 },
+      decisiveWin: { p: 0.0,           mult: 8 }, // tier exists; never pays in v3
+      draw:        { p: 0.36 },                  // banks 1x
+      loss:        { p: 0.56,          mult: 0 },
     },
     { // Stage 2 — 10 HP each (reached on stage-1 draw; 1x banked)
-      narrowWin:   { p: 0.3143605684, mult: 4 },
-      decisiveWin: { p: 0.0165452931, mult: 20 },
-      draw:        { p: 0.08 },
-      loss:        { p: 0.5890941385, mult: 1 },
+      narrowWin:   { p: 0.08,          mult: 4 },
+      decisiveWin: { p: 0.01,          mult: 50 }, // 50x tier: fattened middle
+      draw:        { p: 0.08 },                  // banks 5x
+      loss:        { p: 0.83,          mult: 1 },
     },
     { // Stage 3 — 10 HP each, final (reached on stage-2 draw; 5x banked)
-      narrowWin:   { p: 0.3416962700, mult: 10 },
-      decisiveWin: { p: 0.0179840142, mult: 1000 },
+      narrowWin:   { p: 0.28,          mult: 10 },
+      decisiveWin: { p: 0.0018714927048260406, mult: 500 }, // max win 500x
       draw:        { p: 0 }, // no draws at the final stage
-      loss:        { p: 0.6403197158, mult: 5 },
+      loss:        { p: 0.718128507295174, mult: 5 },
     },
   ];
   var TRIAL = { costMult: 1.0, hp: [5, 10, 10], stages: TRIAL_STAGES };
@@ -73,14 +77,14 @@
   }
   var ARMED = { costMult: 1.5, hp: [5, 10, 10], stages: scaleStages(TRIAL_STAGES, 1.5) };
 
-  var RTP_TARGET = 0.96;
+  var RTP_TARGET = 0.965;
   var MODES = { TRIAL: TRIAL, ARMED: ARMED };
   var RESULTS = ['narrowWin', 'decisiveWin', 'draw', 'loss'];
 
   function normalizeMode(mode) {
     if (typeof mode !== 'string') throw new TypeError('mode must be a string');
     var key = mode.toUpperCase();
-    if (!MODES[key]) throw new RangeError('unknown mode: ' + mode);
+    if (!MODES[key]) throw new RangeError('unknown mode: ' + key);
     return key;
   }
 
